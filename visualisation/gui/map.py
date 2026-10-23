@@ -1,0 +1,1 @@
+print("Hello, welcome to the Age of Empires 2 map visualisation tool!")
