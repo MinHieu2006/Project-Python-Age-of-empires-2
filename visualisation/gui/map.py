@@ -21,13 +21,13 @@ def tiles_to_screen(colonne, ligne):
     y = (colonne + ligne) * LONGUEUR_TILE / 2
     return x, y
 
-def print_map(map): #reste a faire pour bien afficher chaque tuile sur la carte dans pygame induit modif main notament camera etc etc
+ # def print_map(map): #reste a faire pour bien afficher chaque tuile sur la carte dans pygame induit modif main notament camera etc etc
     
 
 def main():
     pygame.init()
     screen = pygame.display.set_mode((LARGEUR, HAUTEUR))
-    pygame.display.set_caption("Carrhae - Map")
+    pygame.display.set_caption("Carrhae Battle- Map")
     horloge = pygame.time.Clock()
 
     running = True
