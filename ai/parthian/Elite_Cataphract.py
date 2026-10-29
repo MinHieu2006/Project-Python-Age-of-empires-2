@@ -10,6 +10,10 @@ class Elite_Cataphract:
         self.attack_animation = 1.36
         self.unit_collision_radius = 0.25
         self.collision_diameter = 0.5
+
+        self.x = x
+        self.y = y
+        self.team = team
         
 
     def attack(self, target): #la target est la personne avec qui self est en contact
