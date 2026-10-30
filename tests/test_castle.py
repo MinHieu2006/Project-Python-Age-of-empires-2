@@ -40,3 +40,25 @@ def test_chateau_detruit():
 
     assert castle.is_destroyed() is True
     assert castle.fire(0, 66, 68) == 0
+
+def test_compatibilite_unites():
+    castle = Castle(60, 60)
+
+    assert castle.HP == 10000
+    assert castle.hp == 10000
+    assert castle.Pierce_armour == 13
+    assert castle.get_pierce_armour() == 13
+    assert castle.is_alive() is True
+
+    castle.HP = 5000
+    assert castle.hp == 5000
+
+    castle.take_damage(5000)
+    assert castle.is_alive() is False
+
+
+def test_nombre_projectiles():
+    castle = Castle(60, 60)
+
+    assert castle.volley_size == 5
+    assert castle.fire(0, 66, 68) == 5
