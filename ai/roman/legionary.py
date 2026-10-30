@@ -43,6 +43,11 @@ class Legionary:
         # distance entre deux unités
         return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
 
+    def is_in_contact(self, other):
+        # Au contact si l'écart entre les deux cercles est d'au plus 0.05 case
+        gap = self.distance(other) - self.unit_collision_radius - other.unit_collision_radius
+        return gap <= 0.05
+
     def update_shield_wall(self, all_units):
         # On compte les autres légionnaires vivants de notre camp à 0.42 ou moins
         neighbours = 0
