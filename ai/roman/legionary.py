@@ -19,6 +19,11 @@ class Legionary:
         # Shield Wall : vrai si au moins 4 autres légionnaires sont à 0.42 ou moins
         self.shield_wall = False
 
+        # Pour le déplacement et la cible
+        self.destination = None
+        self.target = None
+
+
     def is_alive(self):
         return self.HP > 0
 
@@ -37,5 +42,23 @@ class Legionary:
     def distance(self, other):
         # distance entre deux unités
         return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
+
+    def update_shield_wall(self, all_units):
+        # On compte les autres légionnaires vivants de notre camp à 0.42 ou moins
+        neighbours = 0
+        for other in all_units:
+            if other is self:
+                continue
+            if isinstance(other, Legionary) and other.team == self.team and other.is_alive():
+                if self.distance(other) <= 0.42:
+                    neighbours += 1
+        self.shield_wall = neighbours >= 4
+
+    def receive_arrow(self, pierce_attack):
+        # Une flèche d'archer fait 6 dégâts, ou 1 avec le Shield Wall
+        damage = pierce_attack - self.get_pierce_armour()
+        if damage < 1:
+            damage = 1
+        self.HP -= damage
 
     
