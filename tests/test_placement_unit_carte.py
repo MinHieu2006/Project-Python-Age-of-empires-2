@@ -5,11 +5,11 @@ Racine = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, Racine)
 sys.path.insert(0, os.path.join(Racine, "engine", "visualisation", "gui"))
 from engine.units.legionary import Legionary
-from visualisation.gui.main_map import MainMap
-from visualisation.gui.main_map import tiles_to_screen
+from visualisation.gui.map import creer_map
+from visualisation.gui.map import tiles_to_screen
 
 def test_main_map_initialization():
-    main_map = visualisation.gui.main_map.MainMap()
+    main_map = visualisation.gui.map.creer_map()
     assert main_map is not None
     assert main_map.screen is not None
     assert main_map.grille is not None
@@ -17,21 +17,13 @@ def test_main_map_initialization():
     assert main_map.camera_y is not None
     assert main_map.follow_mouse == False
 
-def dessiner_unite(screen, unite, camera_x, camera_y):
-    # Dessiner l'unité sur l'écran en tenant compte de la position de la caméra
-    x, y = tiles_to_screen(unite.x, unite.y) #position de l'unité sur la carte en pixels
-    x -= camera_x
-    y -= camera_y
-    pygame.draw.circle(screen, (200, 40, 40), (int(x), int(y)), 8)  #le rond
-    pygame.draw.circle(screen, (0, 0, 0), (int(x), int(y)), 8, 2)  #le contour du rond
-
-def main():
+def main2():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     pygame.display.set_caption("Test Main Map")
     horloge = pygame.time.Clock()
 
-    main_map = visualisation.gui.main_map.MainMap()
+    main_map = visualisation.gui.map.creer_map()
 
     dt = 0
     running = True

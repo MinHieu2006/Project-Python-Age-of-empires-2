@@ -4,8 +4,6 @@ from constantes import LARGEUR, HAUTEUR, TAILLE_MAP, FPS, VITESSE_CAMERA, COULEU
 from  map import creer_map, tiles_to_screen, print_map
 from minimap import print_minimap, minimap_to_map, map_to_minimap, Zone_Minimap
 
-
-
 def main():
     pygame.init()
     screen = pygame.display.set_mode((LARGEUR, HAUTEUR))
