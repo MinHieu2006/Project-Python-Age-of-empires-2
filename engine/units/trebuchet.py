@@ -34,7 +34,7 @@ class Trebuchet(BaseUnit):
     ACCURACY_VS_BUILDINGS = 0.80
     ACCURACY_VS_UNITS = 0.15
 
-    def __init__(self, x, y, team, rng=None):
+    def __init__(self, x, y, team="ROMAN", rng=None):
         super().__init__(
             x, y, team,
             hp=150,
@@ -153,7 +153,7 @@ class Trebuchet(BaseUnit):
                        + self.bonus_vs_buildings)
         return max(1, max(0, self.Pierce_attack - target.get_pierce_armour()))
 
-    def _release_shot(self, current_time):
+    def _release_shot(self, current_time, apply_damage=True):
         target = self.pending_target
         self.pending_target = None
         if target is None or not target.is_alive():
@@ -162,7 +162,10 @@ class Trebuchet(BaseUnit):
         hit = self.rng.random() < self.accuracy_against(target)
         damage = 0
         impact = (target.x, target.y)
-        if hit:
+        if hit and not apply_damage:
+            # Le moteur appliquera les dégâts à l'impact du projectile
+            damage = self.compute_damage(target)
+        elif hit:
             if getattr(target, "is_building", False):
                 damage = target.receive_pierce_attack(self.Pierce_attack,
                                                       self.bonus_vs_buildings)
@@ -179,7 +182,7 @@ class Trebuchet(BaseUnit):
     # ------------------------------------------------------------------
     # Mise à jour à chaque tick
     # ------------------------------------------------------------------
-    def update(self, current_time):
+    def update(self, current_time, apply_damage=True):
         """À appeler à chaque tick. Termine les repli/déploiement et
         libère le projectile en fin d'animation. Renvoie un TrebuchetShot
         si un tir vient de partir, sinon None."""
@@ -191,5 +194,5 @@ class Trebuchet(BaseUnit):
             self.state = UNPACKED if self.state == UNPACKING else PACKED
 
         if self.pending_target is not None and current_time >= self.is_attacking_until:
-            return self._release_shot(current_time)
+            return self._release_shot(current_time, apply_damage)
         return None
