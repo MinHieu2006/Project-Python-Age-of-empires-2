@@ -3,6 +3,11 @@ import math
 
 
 class Castle:
+    # Permet aux unités (ex. trébuchet) de reconnaître un bâtiment
+    is_building = True
+    # Emprise au sol de 4 x 4 cases
+    footprint = 4
+
     def __init__(self, x, y):
         # Position du château
         self.x = x
