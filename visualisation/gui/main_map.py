@@ -3,8 +3,9 @@ import pygame
 from constantes import LARGEUR, HAUTEUR, TAILLE_MAP, FPS, VITESSE_CAMERA, COULEUR_FOND
 from  map import creer_map, tiles_to_screen, print_map
 from minimap import print_minimap, minimap_to_map, map_to_minimap, Zone_Minimap
+from unite import dessiner_unite
 
-def main():
+def main(unites=None):
     pygame.init()
     screen = pygame.display.set_mode((LARGEUR, HAUTEUR))
     pygame.display.set_caption("Carrhae Battle- Map")
@@ -48,6 +49,9 @@ def main():
  
         screen.fill(COULEUR_FOND)
         print_map(grille, screen, camera_x, camera_y)
+        if unites:
+            for unite in unites:
+                dessiner_unite(screen, unite, camera_x, camera_y)
         print_minimap(screen, grille, camera_x, camera_y)   # dessinée en dernier : elle passe par-dessus la map
         pygame.display.flip()
         dt = horloge.tick(FPS) / 1000
