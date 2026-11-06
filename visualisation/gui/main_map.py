@@ -28,11 +28,10 @@ def main():
             elif evenement.type == pygame.KEYDOWN and evenement.key == pygame.K_ESCAPE:
                 running = False
             elif evenement.type == pygame.MOUSEBUTTONDOWN and evenement.button == 1:
-                    
                     if Zone_Minimap.collidepoint(evenement.pos):
                         follow_mouse = True
-                    elif evenement.type == pygame.MOUSEBUTTONUP and evenement.button == 1:
-                        follow_mouse = False
+            elif evenement.type == pygame.MOUSEBUTTONUP and evenement.button == 1:
+                    follow_mouse = False
 
         touches = pygame.key.get_pressed()
         deplacement = VITESSE_CAMERA * dt
