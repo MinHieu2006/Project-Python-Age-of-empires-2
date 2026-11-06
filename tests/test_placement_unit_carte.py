@@ -11,9 +11,8 @@ from engine.units.legionary import Legionary
 if __name__ == "__main__":
     # Créez une liste d'unités pour le test
     unites = [
-        Legionary(5, 5),
+        Legionary(5, 5), #ici correspond à la position de la tuile sur la carte (colonne, ligne) pas en pixel
         Legionary(10, 10),
         Legionary(15, 15)
     ]
-    
     main(unites=unites)
