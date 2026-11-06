@@ -59,6 +59,14 @@ class BaseUnit:
     def HP(self, value: int):
         self._hp = max(0, int(value))
 
+    @property
+    def hp(self) -> int:
+        return self._hp
+    
+    @hp.setter
+    def hp(self, value: int):
+        self._hp = max(0, int(value))
+
 
     def is_alive(self) -> bool:
         return self._hp > 0
