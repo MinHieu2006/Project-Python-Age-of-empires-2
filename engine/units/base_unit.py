@@ -96,7 +96,7 @@ class BaseUnit:
     def take_damage(self, damage: int) -> int:
         # Deduct damage directly from HP without reapplying armour
         actual_damage = max(1, int(damage))
-        self.hp = max(0, self.hp - actual_damage)
+        self.HP = self.HP - actual_damage
         return actual_damage
 
     def receive_attack(self, melee_damage: int = 0, pierce_damage: int = 0, bonus: int = 0) -> int:
