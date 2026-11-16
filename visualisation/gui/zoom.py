@@ -2,6 +2,8 @@ import pygame
 import sys
 from constantes import ZOOM_MIN, ZOOM_MAX
 
+#------------Fonctions de zoom MAP------------#
+
 def calcul_zoom(direction, VITESSE_ZOOM, ZOOM_ACTUEL):
     # direction sera 1 (pour zoomer) ou -1 (pour dézoomer)
     ZOOM_ACTUEL += direction * VITESSE_ZOOM

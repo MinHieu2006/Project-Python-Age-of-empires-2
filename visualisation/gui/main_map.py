@@ -2,7 +2,7 @@
 import pygame
 from constantes import LARGEUR, HAUTEUR, TAILLE_MAP, FPS, VITESSE_CAMERA, COULEUR_FOND, ZOOM
 from  map import creer_map, tiles_to_screen, print_map
-from minimap import print_minimap, minimap_to_map, map_to_minimap, Zone_Minimap
+from minimap import print_minimap, minimap_to_map,Zone_Minimap
 from zoom import calcul_zoom
 
 
@@ -38,12 +38,17 @@ def main():
             elif evenement.type == pygame.KEYDOWN:
                 if evenement.key == pygame.K_PLUS or evenement.key == pygame.K_KP_PLUS:
                 # 1 indique qu'on zoome (direction = 1)
+                    ancien_zoom = zoom
                     zoom = calcul_zoom(1, 0.1, zoom)
+                    camera_x = (camera_x + LARGEUR / 2) * (zoom / ancien_zoom) - LARGEUR / 2
+                    camera_y = (camera_y + HAUTEUR / 2) * (zoom / ancien_zoom) - HAUTEUR / 2
                 
                 elif evenement.key == pygame.K_MINUS or evenement.key == pygame.K_KP_MINUS:
                 # -1 indique qu'on dézoome (direction = -1)
+                    ancien_zoom = zoom
                     zoom = calcul_zoom(-1, 0.1, zoom)
-                 
+                    camera_x = (camera_x + LARGEUR / 2) * (zoom / ancien_zoom) - LARGEUR / 2
+                    camera_y = (camera_y + HAUTEUR / 2) * (zoom / ancien_zoom) - HAUTEUR / 2
 
         touches = pygame.key.get_pressed()
         deplacement = VITESSE_CAMERA * dt
@@ -58,12 +63,13 @@ def main():
 
         elif follow_mouse == True:
             souris_x, souris_y = pygame.mouse.get_pos()
-            camera_x, camera_y = minimap_to_map(souris_x, souris_y)
+            camera_x, camera_y = minimap_to_map(souris_x, souris_y, zoom)
+            print(zoom, camera_x)
  
         screen.fill(COULEUR_FOND)
         
         print_map(grille, screen, camera_x , camera_y, zoom)  # dessinée en premier : elle est en arrière-plan
-        print_minimap(screen, grille, camera_x, camera_y)   # dessinée en dernier : elle passe par-dessus la map
+        print_minimap(screen, grille, camera_x, camera_y, zoom)   # dessinée en dernier : elle passe par-dessus la map
         pygame.display.flip()
         dt = horloge.tick(FPS) / 1000
             
