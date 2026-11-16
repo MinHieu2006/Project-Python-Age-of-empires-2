@@ -1,7 +1,7 @@
 #Importation des modules
 import pygame
 from constantes import LARGEUR, HAUTEUR, TAILLE_MAP, FPS, VITESSE_CAMERA, COULEUR_FOND, ZOOM
-from  map import creer_map, tiles_to_screen, print_map
+from  map import creer_map, tiles_to_screen, print_map, world_to_screen
 from minimap import print_minimap, minimap_to_map,Zone_Minimap
 from zoom import calcul_zoom
 
@@ -64,7 +64,6 @@ def main():
         elif follow_mouse == True:
             souris_x, souris_y = pygame.mouse.get_pos()
             camera_x, camera_y = minimap_to_map(souris_x, souris_y, zoom)
-            print(zoom, camera_x)
  
         screen.fill(COULEUR_FOND)
         

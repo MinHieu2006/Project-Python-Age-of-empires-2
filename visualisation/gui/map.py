@@ -16,6 +16,14 @@ def tiles_to_screen(colonne, ligne):
     y = (colonne + ligne) * LONGUEUR_TILE / 2
     return x, y
 
+def world_to_screen(monde_x, monde_y, camera_x, camera_y, zoom):
+    """Convertit une position précise du monde (en pixels base 1.0) vers l'écran."""
+    ecran_x = (monde_x * zoom) - camera_x
+    ecran_y = (monde_y * zoom) - camera_y
+    return ecran_x, ecran_y
+
+    
+
 def print_map(grille, screen, camera_x , camera_y,zoom):  
 
     tuile_largeur_zoom = LARGEUR_TILE * zoom
@@ -48,4 +56,3 @@ def print_map(grille, screen, camera_x , camera_y,zoom):
             
             pygame.draw.polygon(screen, COULEUR_PLAINE, points)            # remplissage
             pygame.draw.polygon(screen, COULEUR_CONTOUR, points, 1)       # contour de 1 pixel
-  
