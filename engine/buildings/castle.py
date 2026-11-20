@@ -1,7 +1,5 @@
 
 import math
-
-
 class Castle:
     # Permet aux unités (ex. trébuchet) de reconnaître un bâtiment
     is_building = True
