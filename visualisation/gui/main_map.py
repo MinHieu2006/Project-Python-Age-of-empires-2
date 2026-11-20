@@ -86,15 +86,14 @@ def main(unites=None, mise_a_jour=None, dessiner=None):
  
         screen.fill(COULEUR_FOND)
         
-        print_map(grille, screen, camera_x , camera_y, zoom)  # dessinée en premier : elle est en arrière-plan
+        print_map(grille, screen, camera_x , camera_y, zoom)       # 1. la map, au fond
+        castle_view.draw(screen, camera_x, camera_y, zoom)          # 2. le château
+        if unites is not None:
+            for unite in unites:
+                dessiner_unite(screen, unite, camera_x, camera_y, zoom)  # 3. les unités
+        print_minimap(screen, grille, camera_x, camera_y, zoom)     # 4. la minimap, par-dessus les unités
         if dessiner is not None:
-            dessiner(screen, camera_x, camera_y, zoom)  # unités, textes... par-dessus de la map
-        castle_view.draw(screen, camera_x, camera_y, zoom)  # Dessine le château sur la cartes
-        print_minimap(screen, grille, camera_x, camera_y, zoom)   # dessinée en dernier : elle passe par-dessus la map
-
-        #ANTOINE SALE CHIEN, ne suprime pas cette ligne, elle est nécessaire pour le test de placement des unités sur la carte, TROU DU CUL
-        for unite in unites:
-            dessiner_unite(screen, unite, camera_x, camera_y, zoom)  # Dessine les unités sur la carte
+            dessiner(screen, camera_x, camera_y, zoom)              # 5. les textes, tout devant
         
         pygame.display.flip()
         dt = horloge.tick(FPS) / 1000
