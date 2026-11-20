@@ -4,6 +4,11 @@ LARGEUR_TILE, LONGUEUR_TILE = 64, 32 # Taille d'une tuile
 FPS = 60
 VITESSE_CAMERA = 2500 # Vitesse de déplacement de la caméra (en pixels par seconde)
 
+ZOOM=1.0  # Facteur de zoom initial
+ZOOM_MIN = 0.5  # Facteur de zoom minimum
+ZOOM_MAX = 2.0  # Facteur de zoom maximum
+VITESSE_ZOOM = 0.1  # Vitesse de zoom (facteur par seconde)
+
 
 #------------Constantes de la carte------------#
 TAILLE_MAP = 120 # Taille de la carte (en nombre de tuiles)
@@ -24,3 +29,4 @@ COULEUR_MINIMAP_FOND = (20, 20, 20)
 COULEUR_MINIMAP_TERRAIN = (86, 140, 60)
 COULEUR_MINIMAP_BORDURE = (200, 200, 200)
 COULEUR_CAMERA = (255, 255, 255)
+

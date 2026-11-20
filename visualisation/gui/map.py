@@ -1,6 +1,7 @@
 #Importation des modules
 import pygame
 from constantes import LARGEUR, HAUTEUR, LARGEUR_TILE, LONGUEUR_TILE, TAILLE_MAP, COULEUR_PLAINE, COULEUR_CONTOUR
+from constantes import ZOOM, ZOOM_MIN, ZOOM_MAX
 
 
 def creer_map(taille=TAILLE_MAP):
@@ -15,14 +16,29 @@ def tiles_to_screen(colonne, ligne):
     y = (colonne + ligne) * LONGUEUR_TILE / 2
     return x, y
 
-def print_map(grille, screen, camera_x , camera_y):  
+def world_to_screen(monde_x, monde_y, camera_x, camera_y, zoom):
+    """Convertit une position précise du monde (en pixels base 1.0) vers l'écran."""
+    ecran_x = (monde_x * zoom) - camera_x
+    ecran_y = (monde_y * zoom) - camera_y
+    return ecran_x, ecran_y
+
     
-    demi_l = LARGEUR_TILE / 2
-    demi_h = LONGUEUR_TILE / 2
+
+def print_map(grille, screen, camera_x , camera_y,zoom):  
+
+    tuile_largeur_zoom = LARGEUR_TILE * zoom
+    tuile_hauteur_zoom = LONGUEUR_TILE * zoom
+    
+    demi_l = tuile_largeur_zoom / 2
+    demi_h = tuile_hauteur_zoom / 2
 
     for ligne in range(len(grille)):
         for colonne in range(len(grille[ligne])):
             x, y = tiles_to_screen(colonne, ligne)
+
+            x  = x * zoom
+            y  = y * zoom
+
             x -= camera_x
             y -= camera_y
 
@@ -32,7 +48,7 @@ def print_map(grille, screen, camera_x , camera_y):
             points = [
                 (x, y),
                 (x + demi_l, y + demi_h),
-                (x, y + LONGUEUR_TILE),
+                (x, y + tuile_hauteur_zoom),
                 (x - demi_l, y + demi_h),
             ]   
 
@@ -40,4 +56,3 @@ def print_map(grille, screen, camera_x , camera_y):
             
             pygame.draw.polygon(screen, COULEUR_PLAINE, points)            # remplissage
             pygame.draw.polygon(screen, COULEUR_CONTOUR, points, 1)       # contour de 1 pixel
-  
