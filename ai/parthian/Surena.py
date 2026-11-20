@@ -35,3 +35,8 @@ class Surena:
     ENNEMIS_FUITE = 3             # avec 3 légionnaires collés : on abandonne
     TAILLE_CARTE = 120
     PERIODE = 0.5                 # le général réfléchit toutes les 0.5 s
+
+    def __init__(self):
+        self.prochaine_decision = 0.0
+        self.journal = []
+        self.dernier_plan = None
