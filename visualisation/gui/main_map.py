@@ -80,10 +80,15 @@ def main(unites=None):
         elif follow_mouse == True:
             souris_x, souris_y = pygame.mouse.get_pos()
             camera_x, camera_y = minimap_to_map(souris_x, souris_y, zoom)
+
+        if mise_a_jour is not None:
+            mise_a_jour(dt)  # fait avancer ce qu'il y a sur la map (la bataille par exemple)
  
         screen.fill(COULEUR_FOND)
         
         print_map(grille, screen, camera_x , camera_y, zoom)  # dessinée en premier : elle est en arrière-plan
+        if dessiner is not None:
+            dessiner(screen, camera_x, camera_y, zoom)  # unités, textes... par-dessus de la map
         castle_view.draw(screen, camera_x, camera_y, zoom)  # Dessine le château sur la cartes
         print_minimap(screen, grille, camera_x, camera_y, zoom)   # dessinée en dernier : elle passe par-dessus la map
 
