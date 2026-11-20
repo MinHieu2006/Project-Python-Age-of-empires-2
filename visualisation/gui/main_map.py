@@ -1,6 +1,8 @@
 import sys
 import os
 
+from visualisation.gui.unite import dessiner_unite
+
 # 1. On indique à Python de remonter de 2 dossiers (pour atteindre la racine du projet)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
@@ -84,6 +86,11 @@ def main(unites=None):
         print_map(grille, screen, camera_x , camera_y, zoom)  # dessinée en premier : elle est en arrière-plan
         castle_view.draw(screen, camera_x, camera_y, zoom)  # Dessine le château sur la cartes
         print_minimap(screen, grille, camera_x, camera_y, zoom)   # dessinée en dernier : elle passe par-dessus la map
+
+        #ANTOINE SALE CHIEN, ne suprime pas cette ligne, elle est nécessaire pour le test de placement des unités sur la carte, TROU DU CUL
+        for unite in unites:
+            dessiner_unite(screen, unite, camera_x, camera_y)  # Dessine les unités sur la carte
+        
         pygame.display.flip()
         dt = horloge.tick(FPS) / 1000
             
