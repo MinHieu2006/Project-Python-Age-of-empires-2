@@ -1,3 +1,4 @@
+import math
 from engine.buildings.castle import Castle
 from engine.units.legionary import Legionary
 from engine.units.trebuchet import Trebuchet
@@ -62,6 +63,77 @@ class GameEngine:
             self.state = "PARTHIANS_WIN"
         return "RUNNING" if self.state == "RUNNING" else self.state
 
+    def stop_at_collision(self, unit, start_x, start_y, destination, units):
+        # Displacement from the starting position to the proposed position.
+        dx = unit.x - start_x
+        dy = unit.y - start_y
+        length = dx**2 + dy**2
+        if length == 0:
+            return
+
+        # Fraction of the proposed movement allowed before the first collision.
+        fraction = 1.0
+        for other in units:
+            # Ignore the moving unit itself and dead units.
+            if other is unit or not other.is_alive():
+                continue
+            # Vector from the other unit's centre to the starting position.
+            offset_x = start_x - other.x
+            offset_y = start_y - other.y
+            approach = offset_x * dx + offset_y * dy
+
+            # A nonnegative dot product means movement is away or initially tangent.
+            if approach >= 0:
+                continue
+
+            # Minimum centre-to-centre distance: the sum of both collision radii.
+            radius = (unit.unit_collision_radius + other.unit_collision_radius)
+
+            # Squared starting distance minus the squared minimum distance.
+            clearance = (offset_x * offset_x + offset_y * offset_y - radius * radius)
+
+            # Positive: separated; zero: touching; negative: overlapping.
+            # Stop movement towards a unit that is already touching or overlapping.
+            if clearance <= 0:
+                fraction = 0
+                break
+
+            # Solve where the movement line first meets the combined collision circle.
+            discriminant = approach * approach - length * clearance
+            # A negative discriminant means no intersection; zero means grazing contact.
+            if discriminant <= 0:
+                continue
+            # First contact as a fraction of the proposed movement.
+            contact = (-approach - math.sqrt(discriminant)) / length
+
+            # Keep the earliest contact within the movement segment.
+            if 0 <= contact <= fraction:
+                # Leave a tiny gap to avoid overlap caused by floating-point rounding.
+                small_gap = 1e-9 / math.sqrt(length)
+                fraction = max(0.0, contact - small_gap)
+        # Shorten the movement and retain the destination so the unit can retry.
+        if fraction < 1.0:
+            unit.x = start_x + dx * fraction
+            unit.y = start_y + dy * fraction
+            unit.destination = destination
+
+    def move_units(self, unit, tick_start, units):
+        movement_start = max(tick_start, unit.is_attacking_until)
+
+        if isinstance(unit, Trebuchet):
+            movement_start = max(movement_start, unit.state_change_end)
+
+        movement_time = self.current_time - movement_start
+        if movement_time <= 0:
+            return
+
+        # Save the original position and order before proposing movement.
+        start_x, start_y = unit.x, unit.y
+        destination = unit.destination
+        target_x, target_y = destination
+        unit.move_towards(target_x, target_y, movement_time, self.current_time)
+        self.stop_at_collision(unit, start_x, start_y, destination, units)
+
     def step(self, delta_time: float):
         # Advance the game state by delta_time seconds
         if self.castle is None:
@@ -72,6 +144,7 @@ class GameEngine:
             raise ValueError("delta_time must be positive.")
         # Clear shots from the previous tick
         self.shots_this_tick.clear()
+        tick_start = self.current_time
         self.current_time += delta_time
         self.tick_count += 1
         units_alive = self.get_alive_units("ROMAN") + self.get_alive_units("PARTHIAN")
@@ -82,11 +155,11 @@ class GameEngine:
                 shot = unit.update(self.current_time)
                 if shot is not None:
                     self.shots_this_tick.append(shot)
-            if not unit.is_alive() or unit.destination is None: 
+        # Move units only after all ongoing trebuchet actions are updated.
+        for unit in units_alive:
+            if not unit.is_alive() or unit.destination is None:
                 continue
-            # Move unit towards its destination
-            target_x , target_y = unit.destination
-            unit.move_towards(target_x, target_y, delta_time, self.current_time)
+            self.move_units(unit, tick_start, units_alive)
         # Update shield wall for Roman Legionaries
         for unit in units_alive:
             if isinstance(unit, Legionary):
