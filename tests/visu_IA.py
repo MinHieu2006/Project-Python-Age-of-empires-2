@@ -21,7 +21,7 @@ from main_map import main
 from engine.game_engine import GameEngine
 from engine.units.cavalry_archer import Cavalry_Archer
 
-IA_PARTHE = "BRAINDEADSurena"
+IA_PARTHE = None
 IA_ROMAINE = None
 PAS = 0.1                       # le moteur avance par pas de 0.1 s
 
