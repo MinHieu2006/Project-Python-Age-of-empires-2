@@ -19,7 +19,7 @@ from engine.buildings.castle import Castle
 
 
 
-def main(unites=None):
+def main(unites=None, mise_a_jour=None, dessiner=None):
     pygame.init()
     screen = pygame.display.set_mode((LARGEUR, HAUTEUR))
     pygame.display.set_caption("Carrhae Battle- Map")
