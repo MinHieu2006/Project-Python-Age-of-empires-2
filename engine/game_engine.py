@@ -73,6 +73,7 @@ class GameEngine:
 
         # Fraction of the proposed movement allowed before the first collision.
         fraction = 1.0
+        obstacle = None  # unité qui bloque le mouvement
         for other in units:
             # Ignore the moving unit itself and dead units.
             if other is unit or not other.is_alive():
@@ -96,6 +97,7 @@ class GameEngine:
             # Stop movement towards a unit that is already touching or overlapping.
             if clearance <= 0:
                 fraction = 0
+                obstacle = other
                 break
 
             # Solve where the movement line first meets the combined collision circle.
@@ -111,11 +113,54 @@ class GameEngine:
                 # Leave a tiny gap to avoid overlap caused by floating-point rounding.
                 small_gap = 1e-9 / math.sqrt(length)
                 fraction = max(0.0, contact - small_gap)
+                obstacle = other
         # Shorten the movement and retain the destination so the unit can retry.
         if fraction < 1.0:
             unit.x = start_x + dx * fraction
             unit.y = start_y + dy * fraction
             unit.destination = destination
+            return obstacle
+        return None
+
+    def slide_along(self, unit, obstacle, wanted_x, wanted_y, destination, units):
+        # Reste du mouvement qui n'a pas pu être fait
+        rest_x = wanted_x - unit.x
+        rest_y = wanted_y - unit.y
+        rest_length = math.hypot(rest_x, rest_y)
+        if rest_length < 1e-9:
+            return
+
+        # Direction obstacle -> unité (la "normale" au point de contact)
+        normal_x = unit.x - obstacle.x
+        normal_y = unit.y - obstacle.y
+        normal_length = math.hypot(normal_x, normal_y)
+        if normal_length < 1e-9:
+            return
+        normal_x /= normal_length
+        normal_y /= normal_length
+
+        # On enlève la partie du mouvement qui rentre dans l'obstacle :
+        # il reste la partie qui le longe (la "tangente")
+        towards = rest_x * normal_x + rest_y * normal_y
+        slide_x = rest_x - towards * normal_x
+        slide_y = rest_y - towards * normal_y
+
+        # Si on fonçait droit sur l'obstacle, la tangente est presque nulle :
+        # on choisit alors un côté (perpendiculaire à la normale)
+        if math.hypot(slide_x, slide_y) < 0.3 * rest_length:
+            slide_x = -normal_y * rest_length * 0.5
+            slide_y = normal_x * rest_length * 0.5
+
+        # On essaie ce petit déplacement, en vérifiant à nouveau les collisions.
+        # Si ce côté est bloqué lui aussi, on essaie l'autre côté.
+        start_x, start_y = unit.x, unit.y
+        for side in (1, -1):
+            unit.x = start_x + side * slide_x
+            unit.y = start_y + side * slide_y
+            self.stop_at_collision(unit, start_x, start_y, destination, units)
+            if math.hypot(unit.x - start_x, unit.y - start_y) > 0.2 * rest_length:
+                return  # on a bien avancé : c'est bon
+            unit.x, unit.y = start_x, start_y
 
     def move_units(self, unit, tick_start, units):
         movement_start = max(tick_start, unit.is_attacking_until)
@@ -132,7 +177,26 @@ class GameEngine:
         destination = unit.destination
         target_x, target_y = destination
         unit.move_towards(target_x, target_y, movement_time, self.current_time)
-        self.stop_at_collision(unit, start_x, start_y, destination, units)
+        
+        wanted_x, wanted_y = unit.x, unit.y  # là où l'unité voulait aller
+        obstacle = self.stop_at_collision(unit, start_x, start_y, destination, units)
+        if obstacle is not None:
+            self.slide_along(unit, obstacle, wanted_x, wanted_y, destination, units)
+
+    def resolve_attacks(self, units):
+        for unit in units:
+            target = unit.target
+            if target is None or isinstance(unit, Trebuchet) or not unit.is_alive():
+                continue
+            # Cible morte (ou pas une unité) : on oublie la cible
+            if not hasattr(target, "is_alive") or not target.is_alive():
+                unit.target = None
+                continue
+            if unit.range > 0:
+                if unit.distance(target) <= unit.range:
+                    unit.attack(target, self.current_time)
+            elif hasattr(target, "unit_collision_radius") and unit.is_in_contact(target, tolerance=0.1):
+                unit.attack(target, self.current_time)
 
     def step(self, delta_time: float):
         # Advance the game state by delta_time seconds
@@ -164,6 +228,7 @@ class GameEngine:
         for unit in units_alive:
             if isinstance(unit, Legionary):
                 unit.update_shield_wall(self.get_alive_units("ROMAN"))
+        self.resolve_attacks(units_alive)
         # Check for game over conditions
         self.check_game_over()
         if self.state == "RUNNING" and self.current_time >= self.time_limit:

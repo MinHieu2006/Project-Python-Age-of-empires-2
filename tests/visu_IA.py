@@ -19,7 +19,6 @@ import pygame
 
 from main_map import main
 from engine.game_engine import GameEngine
-from engine.units.cavalry_archer import Cavalry_Archer
 
 IA_PARTHE = None
 IA_ROMAINE = None
@@ -31,16 +30,6 @@ def charger_ia(nom, dossier):
         return None
     module = importlib.import_module(f"ai.{dossier}.{nom}")   # comme "import ai.dossier.nom"
     return getattr(module, nom)()                              # la classe du même nom
-
-
-def lancer_attaques(engine, unites):
-    """TEMPORAIRE : le moteur ne lit pas encore unit.target, on fait attaquer ici."""
-    for unite in unites:
-        cible = unite.target
-        if cible is None or not hasattr(cible, "is_alive") or not cible.is_alive():
-            continue
-        if isinstance(unite, Cavalry_Archer) or unite.is_in_contact(cible, tolerance=0.1):
-            unite.attack(cible, engine.current_time)
 
 
 def texte_journal(general):
@@ -72,7 +61,6 @@ def lancer(nom_parthe=IA_PARTHE, nom_romain=IA_ROMAINE):
             for general in generaux:
                 general.decide(engine)
             engine.step(PAS)
-            lancer_attaques(engine, unites)
             en_retard[0] -= PAS
         # On retire les morts de la liste ([:] = on modifie la MÊME liste que main_map)
         unites[:] = [u for u in unites if u.is_alive()]
