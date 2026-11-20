@@ -94,6 +94,5 @@ def lancer(nom_parthe=IA_PARTHE, nom_romain=IA_ROMAINE):
 
 
 if __name__ == "__main__":
-    # Les mots tapés après "py -m tests.visu_IA" sont dans sys.argv[1], sys.argv[2]...
     lancer(sys.argv[1] if len(sys.argv) > 1 else IA_PARTHE,
            sys.argv[2] if len(sys.argv) > 2 else IA_ROMAINE)
