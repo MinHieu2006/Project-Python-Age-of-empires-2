@@ -8,7 +8,7 @@ from zoom import calcul_zoom
 
 
 
-def main():
+def main(unites=None):
     pygame.init()
     screen = pygame.display.set_mode((LARGEUR, HAUTEUR))
     pygame.display.set_caption("Carrhae Battle- Map")
@@ -69,6 +69,13 @@ def main():
         
         print_map(grille, screen, camera_x , camera_y, zoom)  # dessinée en premier : elle est en arrière-plan
         print_minimap(screen, grille, camera_x, camera_y, zoom)   # dessinée en dernier : elle passe par-dessus la map
+
+        # ANTOINE SALE CHIEN, ne suprime pas ce code, il est nécessaire pour le test de placement des troupes sur la carte, TROU DE BALLE
+        if unites:
+            for unite in unites:
+                dessiner_unite(screen, unite, camera_x, camera_y)
+        print_minimap(screen, grille, camera_x, camera_y, zoom)   # dessinée en dernier : elle passe par-dessus la map
+        
         pygame.display.flip()
         dt = horloge.tick(FPS) / 1000
             
