@@ -89,7 +89,7 @@ def main(unites=None):
 
         #ANTOINE SALE CHIEN, ne suprime pas cette ligne, elle est nécessaire pour le test de placement des unités sur la carte, TROU DU CUL
         for unite in unites:
-            dessiner_unite(screen, unite, camera_x, camera_y)  # Dessine les unités sur la carte
+            dessiner_unite(screen, unite, camera_x, camera_y, zoom)  # Dessine les unités sur la carte
         
         pygame.display.flip()
         dt = horloge.tick(FPS) / 1000
