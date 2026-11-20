@@ -1,3 +1,6 @@
+"""Général parthe BRAINDEAD : il ne fait rien.
+"""
+
 class BRAINDEADSurena:
     
     nom = "BRAINDEAD Surena"
