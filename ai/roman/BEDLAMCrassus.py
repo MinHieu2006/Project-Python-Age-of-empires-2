@@ -41,8 +41,9 @@ class BEDLAMCrassus:
             unite.target = cible
 
             if isinstance(unite, Trebuchet) and unite.is_in_range(cible):
-                # Un Trebuchet qui est à portée de sa cible ne bouge pas
+                # Un Trebuchet qui est à portée de sa cible ne bouge pas, et on le déploie pour tirer
                 unite.destination = None
+                unite.unpack(current_time=t)
             else:
                 # Sinon on va vers la cible
                 unite.destination = (cible.x, cible.y)

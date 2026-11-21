@@ -68,7 +68,7 @@ def lancer(nom_parthe=IA_PARTHE, nom_romain=IA_ROMAINE):
             engine.step(PAS)
             en_retard[0] -= PAS
 
-         # --- diagnostic (à retirer ensuite) ---
+         # affichages des infos des trebuchets dans la console
             for s in getattr(engine, "shots_this_tick", []):
                 stats["tirs"] += 1
                 stats["touches"] += int(s.hit)
