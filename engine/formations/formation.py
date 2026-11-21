@@ -50,8 +50,12 @@ def local_slots(shape, n, spacing, ranks=None, radius=None):
             count = min(cols, remaining)
             remaining -= count
             shift = (k % 2) * spacing / 2 if ranks > 1 else 0.0
-            for i in range(count):
-                lat = (i - (count - 1) / 2) * spacing + shift - (spacing / 4 if ranks > 1 else 0)
+            # Un rang incomplet reste sur la grille hexagonale (décalage d'un
+            # nombre entier de places) : recentré d'une demi-place, il serait
+            # aligné sur le rang voisin, à moins d'un diamètre de légionnaire.
+            start = (cols - count) // 2
+            for i in range(start, start + count):
+                lat = (i - (cols - 1) / 2) * spacing + shift - (spacing / 4 if ranks > 1 else 0)
                 fwd = -k * gap + (ranks - 1) * gap / 2
                 slots.append((fwd, lat))
     elif shape == "circle":
@@ -365,7 +369,11 @@ class Formation:
         # Rotation progressive (évite de mélanger toutes les places)
         tf = getattr(self, "_target_facing", self.facing)
         diff = (tf - self.facing + math.pi) % (2 * math.pi) - math.pi
-        max_turn = self.turn_rate * dt
+        # Les extrémités d'une formation large ne doivent pas aller plus vite
+        # que les unités : sinon elle se disloque (et perd le Shield Wall).
+        half_width = max(self.width() / 2, 0.5)
+        min_speed = min(u.speed for u in self.members)
+        max_turn = min(self.turn_rate, 0.8 * min_speed / half_width) * dt
         if abs(diff) > 1e-3:
             self.facing += max(-max_turn, min(max_turn, diff))
 

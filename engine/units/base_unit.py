@@ -1,8 +1,15 @@
 import math
+from typing import Any
 
 
 class BaseUnit:
     """Base class for all combat units in the simulation."""
+
+    # Attributs posés par le moteur (World.add_unit) : déclarés ici pour le
+    # typage uniquement (aucune valeur par défaut, aucun effet à l'exécution).
+    order: Any                  # engine.world.Order | None
+    formation: Any              # engine.formations.formation.Formation | None
+    pending_target: Any         # cible de l'attaque en cours d'animation
 
     def __init__(
         self,

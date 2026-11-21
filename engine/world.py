@@ -102,6 +102,21 @@ _DETOURS = [0.0, 0.35, -0.35, 0.8, -0.8, 1.25, -1.25, 1.65, -1.65]
 _DETOURS_CS = [(math.cos(a), math.sin(a)) for a in _DETOURS]
 
 
+def _front_first(u) -> float:
+    """Ordre de déplacement : les unités de tête bougent d'abord, chacune selon
+    sa propre direction de marche. Sans cela, dans une formation au contact,
+    le rang arrière se heurte au rang avant qui n'a pas encore bougé : la
+    formation se déforme à chaque pas et perd le Shield Wall."""
+    o = getattr(u, "order", None)
+    if o is None or o.kind != "move":
+        return 0.0
+    dx, dy = o.x - u.x, o.y - u.y
+    d = math.hypot(dx, dy)
+    if d < 1e-9:
+        return 0.0
+    return -(u.x * dx + u.y * dy) / d
+
+
 class World:
     def __init__(self, width=120, height=120, seed=None, dt=DEFAULT_DT,
                  idle_timeout=DEFAULT_IDLE_TIMEOUT, max_time=DEFAULT_MAX_TIME,
@@ -219,7 +234,7 @@ class World:
         self._resolve_pending_attacks(t)
         self._castle_fire(t)
         self._blocked = []
-        for u in self.units:
+        for u in sorted(self.units, key=_front_first):
             if u.is_alive():
                 self._behave(u, t, dt)
         # Déplacements « simultanés » : une unité bloquée par une voisine qui
