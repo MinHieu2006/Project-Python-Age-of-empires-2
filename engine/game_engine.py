@@ -203,11 +203,12 @@ class GameEngine:
                 if unit.is_unpacked() and unit.can_attack(t) and unit.is_in_range(target):
                     unit.attack(target, t)
                 continue
+            # Pour les autres unités, on vérifie la portée et le contact
             if unit.range > 0:
                 if unit.distance(target) <= unit.range:
-                    unit.attack(target, self.current_time)
+                    unit.attack(target, t)
             elif hasattr(target, "unit_collision_radius") and unit.is_in_contact(target, tolerance=0.1):
-                unit.attack(target, self.current_time)
+                unit.attack(target, t)
 
     def step(self, delta_time: float):
         # Advance the game state by delta_time seconds

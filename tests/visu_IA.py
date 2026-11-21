@@ -20,11 +20,14 @@ import pygame
 from main_map import main
 from engine.game_engine import GameEngine
 from engine.buildings.castle import Castle
+from engine.units.trebuchet import Trebuchet
 
 IA_PARTHE = None
 IA_ROMAINE = None
 PAS = 0.1                       # le moteur avance par pas de 0.1 s
 
+derniere_trace = [-10.0]
+stats = {"tirs": 0, "touches": 0, "degats": 0}
 
 def charger_ia(nom, dossier):
     if nom is None or nom == "aucun":
@@ -64,6 +67,30 @@ def lancer(nom_parthe=IA_PARTHE, nom_romain=IA_ROMAINE):
                 general.decide(engine)
             engine.step(PAS)
             en_retard[0] -= PAS
+
+         # --- diagnostic (à retirer ensuite) ---
+            for s in getattr(engine, "shots_this_tick", []):
+                stats["tirs"] += 1
+                stats["touches"] += int(s.hit)
+                stats["degats"] += s.damage
+                print(f"TIR t={s.time:.1f} {'touché' if s.hit else 'raté'} "
+                      f"dégâts={s.damage} cible={type(s.target).__name__}")
+
+            if engine.current_time - derniere_trace[0] >= 2.0:
+                derniere_trace[0] = engine.current_time
+                trebs = [u for u in engine.romans if isinstance(u, Trebuchet) and u.is_alive()]
+                if trebs:
+                    u = trebs[0]
+                    c = u.target
+                    print(f"t={engine.current_time:6.1f} état={u.state:10} "
+                          f"cible={type(c).__name__ if c else None} "
+                          f"d={u.distance_to_target(engine.castle):5.1f} "
+                          f"peut_tirer={u.can_attack(engine.current_time)} "
+                          f"PV={engine.castle.hp} "
+                          f"(tirs={stats['tirs']} touchés={stats['touches']})")
+                else:
+                    print(f"t={engine.current_time:6.1f} aucun trébuchet vivant")
+        
         # On retire les morts de la liste ([:] = on modifie la MÊME liste que main_map)
         unites[:] = [u for u in unites if u.is_alive()]
 
