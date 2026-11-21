@@ -1,7 +1,7 @@
 import sys
 import os
 
-from visualisation.gui.unite import dessiner_unite
+from unite import dessiner_unite
 
 # 1. On indique à Python de remonter de 2 dossiers (pour atteindre la racine du projet)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
@@ -96,6 +96,7 @@ def main(unites=None, mise_a_jour=None, dessiner=None):
         if dessiner is not None:
             dessiner(screen, camera_x, camera_y, zoom)              # 5. les textes, tout devant
         
+       
         pygame.display.flip()
         dt = horloge.tick(FPS) / 1000
             
