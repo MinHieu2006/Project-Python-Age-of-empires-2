@@ -15,6 +15,16 @@ Idée générale (section 74 du sujet) :
     cheval qui s'approchent des trébuchets, sans dépasser une laisse : ils
     protègent l'espace en menaçant de le bloquer ;
   * RIPOSTE : un cataphracte au contact est encerclé à 3 contre 1 ;
+  * SACRIFICE : un légionnaire de la périphérie (écran, tirailleurs), loin
+    des trébuchets, submergé (3 cataphractes au contact) ou à bout de forces
+    (moins de 30 % de PV), quitte sa formation et retient les cavaliers sur
+    place : la formation se referme derrière lui et personne ne vient le
+    dégager (ce serait offrir d'autres hommes au piétinement) ;
+  * RETRAITE : quand les légionnaires ne sont plus assez nombreux face aux
+    cataphractes qui approchent, les trébuchets reculent vers le point de
+    départ sans pivoter ; escorte, écran et tirailleurs se placent par
+    rapport à eux, donc toute la formation recule d'un bloc, géométrie
+    conservée. La marche reprend quand la menace s'éloigne ;
   * personne ne s'aventure à portée du château, pas même le bout d'une ligne.
 
 Densité : une formation « dense » est une ligne de deux rangs décalés au
@@ -34,7 +44,10 @@ Paramètres :
   skirmish_groups / skirmish_size : groupes de tirailleurs ;
   march_speed : fraction de la vitesse des trébuchets pendant la marche ;
   chase : les tirailleurs poursuivent-ils les archers (False : simple garde) ;
-  melee_reach : distance max à laquelle un légionnaire va riposter.
+  melee_reach : distance max à laquelle un légionnaire va riposter ;
+  retreat_ratio : retraite si légionnaires < retreat_ratio x cataphractes
+      (0 : jamais de retraite) ;
+  sacrifice : autorise le sacrifice des légionnaires de la périphérie.
 """
 
 from __future__ import annotations
@@ -62,6 +75,10 @@ CASTLE_MARGIN: float = 1.3           # marge hors de la portée du château
 CONTACT: float = 1.0                 # distance (centres) d'un cataphracte « au contact »
 REFACE_ANGLE: float = math.radians(35)   # rotation minimale d'une formation dense
 DENSE_RANKS: int = 2
+SACRIFICE_SWARM: int = 3             # cataphractes au contact pour submerger un légionnaire
+SACRIFICE_HP: float = 0.3            # fraction de PV sous laquelle on se sacrifie
+SACRIFICE_MIN_DIST: float = 5.0      # pas de sacrifice si près des trébuchets
+RETREAT_CLEAR: float = 15.0          # fin de retraite : cataphractes au-delà
 
 
 def angle_diff(a: float, b: float) -> float:
@@ -76,12 +93,14 @@ class Crassus(General):
                  cata_alert: float = 8.0, ring_alert: float = 12.0,
                  skirmish_groups: int = 2, skirmish_size: int = 8,
                  march_speed: float = 0.9, chase: bool = True,
-                 melee_reach: float = 2.5) -> None:
+                 melee_reach: float = 2.5, retreat_ratio: float = 1.5,
+                 sacrifice: bool = True) -> None:
         super().__init__(aggressiveness=aggressiveness, screen_distance=screen_distance,
                          cata_alert=cata_alert, ring_alert=ring_alert,
                          skirmish_groups=skirmish_groups, skirmish_size=skirmish_size,
                          march_speed=march_speed, chase=chase,
-                         melee_reach=melee_reach)
+                         melee_reach=melee_reach, retreat_ratio=retreat_ratio,
+                         sacrifice=sacrifice)
         self.aggressiveness: float = aggressiveness
         self.screen_distance: float = screen_distance
         self.cata_alert: float = cata_alert
@@ -91,6 +110,11 @@ class Crassus(General):
         self.march_speed: float = march_speed
         self.chase: bool = chase
         self.melee_reach: float = melee_reach
+        self.retreat_ratio: float = retreat_ratio
+        self.sacrifice: bool = sacrifice
+        self.rally_point: Optional[Point] = None
+        self.retreating: bool = False
+        self.sacrificed: dict[BaseUnit, Formation] = {}   # légionnaire -> formation d'origine
         self.ann: Announcer = Announcer()
         self.firing_point: Optional[Point] = None
         self.toward_castle: float = 0.0
@@ -119,6 +143,7 @@ class Crassus(General):
         fire_d = c.footprint / 2 + (trebs[0].range if trebs else 16.0) - FIRE_MARGIN
         self.firing_point = (c.x + ux * fire_d, c.y + uy * fire_d)
         self.toward_castle = math.atan2(-uy, -ux)
+        self.rally_point = cmd.map.clamp(rx, ry, 1.0)
         # Aucun légionnaire à portée du château (portée mesurée bord à bord)
         self.castle_safe = (c.footprint / 2 + c.attack_range + LEGIONARY_RADIUS
                             + CASTLE_MARGIN)
@@ -175,6 +200,8 @@ class Crassus(General):
         hcas = cmd.enemy_units(CAVALRY_ARCHER)
         near_cata, d_cata = cmd.nearest(tx, ty, catas)
 
+        self._sacrifice(cmd, tx, ty, catas)
+        self._retreat(cmd, catas, d_cata)
         self._escort(cmd, d_cata)
         self._trebuchets(cmd, trebs, near_cata, d_cata)
         self._screen(cmd, tx, ty, catas, near_cata, d_cata)
@@ -288,6 +315,8 @@ class Crassus(General):
         assert self.firing_point is not None
         fx, fy = self.firing_point
         tf = self.trebs
+        if self.retreating:
+            return
         at_spot = math.hypot(tf.x - fx, tf.y - fy) < 0.5
         if not self.siege and at_spot:
             self.siege = True
@@ -375,6 +404,64 @@ class Crassus(General):
         s.status = "DENSE" if s.is_dense() else "OUVERT"
 
     # ------------------------------------------------------------------
+    # Sacrifice et retraite
+    # ------------------------------------------------------------------
+    def _sacrifice(self, cmd: Commander, tx: float, ty: float,
+                   catas: Sequence[BaseUnit]) -> None:
+        """Un légionnaire de la périphérie submergé ou à bout de forces
+        retient les cataphractes sur place au lieu de les ramener dans la
+        formation. Il la réintègre si la mêlée se termine et qu'il vit encore."""
+        for u, origin in list(self.sacrificed.items()):
+            if not u.is_alive():
+                del self.sacrificed[u]
+                continue
+            foe, d = cmd.nearest(u.x, u.y, catas)
+            if foe is None or d > 1.5 * CONTACT:
+                del self.sacrificed[u]
+                home = origin if origin in cmd.my_formations() else self.screen
+                if home is not None:
+                    home.add(u)
+            elif u.order is None or u.order.target is not foe:
+                cmd.attack(u, foe)
+        if not self.sacrifice or not catas:
+            return
+        for f in [self.screen, *self.skirmishers]:
+            if f is None:
+                continue
+            for u in f.alive_members():
+                if math.hypot(u.x - tx, u.y - ty) < SACRIFICE_MIN_DIST:
+                    continue
+                close = [c for c in catas if math.hypot(c.x - u.x, c.y - u.y) < CONTACT]
+                if not close:
+                    continue
+                if len(close) >= SACRIFICE_SWARM or u.hp < SACRIFICE_HP * u.max_hp:
+                    f.remove(u)
+                    self.sacrificed[u] = f
+                    cmd.attack(u, min(close, key=lambda c: math.hypot(c.x - u.x, c.y - u.y)))
+                    self.ann.say(cmd, "sacrifice",
+                                 f"Sacrifice : un légionnaire de {f.name} retient "
+                                 f"{len(close)} cataphracte(s), la formation se referme")
+
+    def _retreat(self, cmd: Commander, catas: Sequence[BaseUnit], d_cata: float) -> None:
+        """Retraite d'un bloc : seuls les trébuchets changent d'objectif, sans
+        pivoter ; les autres formations se placent par rapport à eux."""
+        if self.siege or not self.formed or not self.retreat_ratio:
+            return
+        assert self.rally_point is not None and self.firing_point is not None
+        weak = len(cmd.my_units(LEGIONARY)) < self.retreat_ratio * len(catas)
+        if not self.retreating and weak and d_cata < self.ring_alert:
+            self.retreating = True
+            self.trebs.move_to(*self.rally_point, facing=self.toward_castle)
+            self.trebs.speed_factor = self.march_speed
+            self.ann.say(cmd, "retreat",
+                         f"Retraite vers ({self.rally_point[0]:.0f}, {self.rally_point[1]:.0f}) : "
+                         f"trop peu de légionnaires face aux cataphractes, formation conservée")
+        elif self.retreating and (not weak or d_cata > RETREAT_CLEAR):
+            self.retreating = False
+            self.trebs.move_to(*self.firing_point, facing=self.toward_castle)
+            self.ann.say(cmd, "retreat", "Fin de la retraite : reprise de la marche")
+
+    # ------------------------------------------------------------------
     # Riposte en mêlée
     # ------------------------------------------------------------------
     def _gang_up(self, cmd: Commander, tx: float, ty: float,
@@ -397,7 +484,13 @@ class Crassus(General):
             free.extend(escort)
         taken: set[BaseUnit] = set()
         engaged = 0
+        # Cataphractes retenus par un sacrifié loin des trébuchets : on les laisse
+        held = {c for c in catas
+                if math.hypot(c.x - tx, c.y - ty) > SACRIFICE_MIN_DIST
+                and any(math.hypot(c.x - u.x, c.y - u.y) < CONTACT for u in self.sacrificed)}
         for c in sorted(catas, key=lambda c: math.hypot(c.x - tx, c.y - ty)):
+            if c in held:
+                continue
             pool = free if not ring_holds else free + [
                 u for u in escort if math.hypot(u.x - c.x, u.y - c.y) < CONTACT]
             near = sorted((u for u in pool if u not in taken

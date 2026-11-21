@@ -101,3 +101,20 @@ def test_parametres_et_repr() -> None:
     r = Carrhae(general, Braindead(), seed=1, n_legionaries=30, n_trebuchets=2,
                 roman_start_position="N", headless=True)
     assert r.winner == ROMAN
+
+
+def test_sacrifice_de_la_peripherie() -> None:
+    """Un légionnaire de l'écran submergé retient les cataphractes au lieu
+    de les ramener dans la formation."""
+    r = Carrhae(Crassus(), Surena(), seed=1, headless=True)
+    texts = [text for _, text in r.decisions[ROMAN]]
+    assert any("Sacrifice" in t for t in texts)
+    assert r.winner == ROMAN
+
+
+def test_retraite_quand_les_legionnaires_manquent() -> None:
+    r = Carrhae(Crassus(), Surena(), seed=1, n_legionaries=25, headless=True)
+    texts = [text for _, text in r.decisions[ROMAN]]
+    assert any("Retraite" in t for t in texts)
+    r = Carrhae(Crassus(retreat_ratio=0), Surena(), seed=1, n_legionaries=25, headless=True)
+    assert not any("Retraite" in text for _, text in r.decisions[ROMAN])
