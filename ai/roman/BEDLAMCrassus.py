@@ -1,6 +1,7 @@
 """Général romiain BEDLAM : chaque unité attaque l'ennemi le plus proche.
 
-Pas de stratégie, pas de groupe : chacun pour soi. Le sujet demande que
+Pas de stratégie, pas de groupe (pour les unités, le trebuchet 
+fonce sur la chateau) : chacun pour soi. Le sujet demande que
 Crassus fasse mieux que cette IA.
 """
 
@@ -24,13 +25,19 @@ class BEDLAMCrassus:
         parth = engine.get_alive_units("PARTHIAN")
         if not parth:
             return
+        chateau = engine.castle
 
         if not self.journal:
             self.journal.append("BEDLAM : chaque unité attaque l'ennemi le plus proche")
 
         for unite in engine.get_alive_units("ROMAN"):
-            # L'ennemi le plus proche (min avec la distance comme critère)
-            cible = min(parth, key=unite.distance)
+            if isinstance(unite, Trebuchet):
+                # Un Trebuchet peut attaquer les unités mais on va privilégier le chateau
+                cible = chateau #on ne met pas d'autre cible car si le chateau est detruit la partie est finie
+            else:
+                # L'ennemi le plus proche (min avec la distance comme critère)
+                cible = min(parth, key=unite.distance)
+
             unite.target = cible
 
             if isinstance(unite, Trebuchet) and unite.is_in_range(cible):

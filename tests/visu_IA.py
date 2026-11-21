@@ -19,6 +19,7 @@ import pygame
 
 from main_map import main
 from engine.game_engine import GameEngine
+from engine.buildings.castle import Castle
 
 IA_PARTHE = None
 IA_ROMAINE = None
@@ -53,7 +54,8 @@ def lancer(nom_parthe=IA_PARTHE, nom_romain=IA_ROMAINE):
     engine.setup_scenario()
     unites = engine.romans + engine.parthians   # main_map dessine cette liste
     en_retard = [0.0]                           # temps réel pas encore simulé
-    police = []                                 # créée une seule fois, à la 1re image
+    police = [] 
+    chateau = engine.castle                     # créée une seule fois, à la 1re image
 
     def mise_a_jour(dt):
         en_retard[0] += dt
@@ -72,6 +74,7 @@ def lancer(nom_parthe=IA_PARTHE, nom_romain=IA_ROMAINE):
             f"Romains ({nom_romain}) : {len(engine.get_alive_units('ROMAN'))} vivants",
             f"Journal parthe : {texte_journal(parthe)}"[:90],
             f"Journal romain : {texte_journal(romain)}"[:90],
+            f"PV chateau : {chateau.HP}"
         ]
         if not police:
             police.append(pygame.font.SysFont(None, 24))
