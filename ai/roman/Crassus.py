@@ -1,10 +1,10 @@
 """Général romain "Crassus".
 
 Ce que doit faire le général Romain (au minimum) selon le cours selon la section 74 :
-- maintenir les trébuchets derrière l’infanterie principale ;
-- déployer un large écran pour empêcher les cataphractaires d’atteindre directement le siège ;
+- maintenir les trébuchets derrière l'infanterie principale ;
+- déployer un large écran pour empêcher les cataphractaires d'atteindre directement le siège ;
 - former des groupes compacts lorsque la menace immédiate est constituée par une pluie de flèches ;
-- disperser ces groupes à l’approche des cataphractaires ;
+- disperser ces groupes à l'approche des cataphractaires ;
 - bloquer les axes de passage probables de la cavalerie plutôt que de poursuivre des cavaliers isolés ;
 - battre en retraite tout en préservant la géométrie relative de la formation ;
 - sacrifier des légionnaires placés en périphérie si cela permet de préserver les trébuchets ;
