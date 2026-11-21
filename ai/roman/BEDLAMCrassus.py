@@ -28,7 +28,7 @@ class BEDLAMCrassus:
         if not self.journal:
             self.journal.append("BEDLAM : chaque unité attaque l'ennemi le plus proche")
 
-        for unite in engine.get_alive_units("PARTHIAN"):
+        for unite in engine.get_alive_units("ROMAN"):
             # L'ennemi le plus proche (min avec la distance comme critère)
             cible = min(parth, key=unite.distance)
             unite.target = cible
