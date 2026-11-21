@@ -184,13 +184,24 @@ class GameEngine:
             self.slide_along(unit, obstacle, wanted_x, wanted_y, destination, units)
 
     def resolve_attacks(self, units):
+        t = self.current_time
         for unit in units:
+            #Un tribuchet doit etre mis à jour a chaque tick pour savoir si il tire ou pas
+            if isinstance(unit, Trebuchet):
+                shot = unit.update(t)
+                if shot is not None:
+                    self.shots_this_tick.append(shot)
             target = unit.target
-            if target is None or isinstance(unit, Trebuchet) or not unit.is_alive():
+            if target is None or not unit.is_alive():
                 continue
             # Cible morte (ou pas une unité) : on oublie la cible
             if not hasattr(target, "is_alive") or not target.is_alive():
                 unit.target = None
+                continue
+            #cas special pour les tribuchets : ils doivent etre deployés pour tirer
+            if isinstance(unit, Trebuchet):
+                if unit.is_unpacked() and unit.can_attack(t) and unit.is_in_range(target):
+                    unit.attack(target, t)
                 continue
             if unit.range > 0:
                 if unit.distance(target) <= unit.range:
