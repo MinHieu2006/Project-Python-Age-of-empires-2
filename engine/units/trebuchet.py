@@ -34,7 +34,7 @@ class Trebuchet(BaseUnit):
     ACCURACY_VS_BUILDINGS = 0.80
     ACCURACY_VS_UNITS = 0.15
 
-    def __init__(self, x, y, team="ROMAN", rng=None):
+    def __init__(self, x, y, team: str = "ROMAN", rng=None):
         super().__init__(
             x, y, team,
             hp=150,
