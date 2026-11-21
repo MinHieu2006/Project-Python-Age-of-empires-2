@@ -92,7 +92,6 @@ def main(unites=None, mise_a_jour=None, dessiner=None):
             for unite in unites:
                 dessiner_unite(screen, unite, camera_x, camera_y, zoom)  # 3. les unités
         print_minimap(screen, grille, camera_x, camera_y, zoom)     # 4. la minimap, par-dessus les unités
-        #ANTOINE SALE CHIEN, ne suprime pas le code ci-dessous, il est important pour l'affichage du texte sur la map
         if dessiner is not None:
             dessiner(screen, camera_x, camera_y, zoom)              # 5. les textes, tout devant
         
