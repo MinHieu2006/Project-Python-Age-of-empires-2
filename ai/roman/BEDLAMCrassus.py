@@ -55,8 +55,11 @@ class BEDLAMCrassus:
         for unite in engine.get_alive_units("ROMAN"):
             if isinstance(unite, Trebuchet):
                 self._gerer_tribuchet(unite, ennemis, t)
-            else:
+            elif parth:
                 # L'ennemi le plus proche (min avec la distance comme critère)
-                cible = min(ennemis, key=unite.distance)
+                cible = min(parth, key=unite.distance)
                 unite.target = cible
                 unite.destination = (cible.x, cible.y)
+            else : #plus d'ennemeis on s'arrete de bouger
+                unite.target = None
+                unite.destination = None
